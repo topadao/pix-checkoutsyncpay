@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cred Amigo Layalte Vermelho</title>
+  <style>
+    body { font-family: sans-serif; background: #f3f3f3; text-align: center; padding: 2rem; }
+    h1 { color: #b22222; }
+    .pix-area { margin-top: 2rem; }
+    img { width: 250px; margin: 1rem auto; display: block; }
+    .copy-area { background: #fff; padding: 1rem; border-radius: 8px; display: inline-block; }
+    .timer { margin-top: 1rem; font-size: 1.2rem; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Pagamento Cred Amigo Layalte Vermelho</h1>
+  <div class="pix-area" id="pixArea">
+    <p>Carregando QR Code...</p>
+  </div>
+  <div class="timer" id="timer">15:00</div>
+
+  <script>
+    async function gerarPix() {
+      const resposta = await fetch("/gerar-pix", { method: "POST" });
+      const dados = await resposta.json();
+
+      document.getElementById("pixArea").innerHTML = `
+        <img src="${dados.qrCode}" alt="QR Code Pix" />
+        <div class="copy-area">
+          <p><strong>Copia e Cola:</strong></p>
+          <textarea rows="2" style="width: 100%;">${dados.copiaCola}</textarea>
+        </div>
+      `;
+    }
+
+    function iniciarContador(segundos) {
+      const timer = document.getElementById("timer");
+      const intervalo = setInterval(() => {
+        let min = String(Math.floor(segundos / 60)).padStart(2, '0');
+        let sec = String(segundos % 60).padStart(2, '0');
+        timer.textContent = `${min}:${sec}`;
+        if (segundos <= 0) {
+          clearInterval(intervalo);
+          window.location.href = "/";
+        }
+        segundos--;
+      }, 1000);
+    }
+
+    gerarPix();
+    iniciarContador(900);
+  </script>
+</body>
+</html>
