@@ -1,44 +1,85 @@
-<script>
-  async function gerarPix() {
-    try {
-      const resposta = await fetch("/gerar-pix", { method: "POST" });
-      const dados = await resposta.json();
-
-      if (dados.qrCode && dados.copiaCola) {
-        document.getElementById("pixArea").innerHTML = `
-          <img src="${dados.qrCode}" alt="QR Code Pix" />
-          <div class="copy-area">
-            <p><strong>Copia e Cola:</strong></p>
-            <textarea rows="2" style="width: 100%;">${dados.copiaCola}</textarea>
-          </div>
-        `;
-      } else {
-        document.getElementById("pixArea").innerHTML = `
-          <p style="color: red;">Erro ao gerar QR Code: ${dados.error || 'desconhecido'}</p>
-        `;
-      }
-
-    } catch (err) {
-      document.getElementById("pixArea").innerHTML = `
-        <p style="color: red;">Erro ao conectar com o servidor: ${err.message}</p>
-      `;
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cred Amigo - Pagamento Pix</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: #f0f4f8;
     }
-  }
+    h1 {
+      color: #2b2b2b;
+    }
+    #qrcode {
+      margin: 20px auto;
+      width: 300px;
+      height: 300px;
+      border: 1px solid #ccc;
+    }
+    #copiaCola {
+      margin: 20px auto;
+      word-wrap: break-word;
+      max-width: 90%;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #timer {
+      margin-top: 20px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cred Amigo</h1>
+  <p>Escaneie o QR Code abaixo ou copie o código Pix:</p>
+  <img id="qrcode" src="" alt="QR Code Pix" />
+  <div id="copiaCola">Carregando...</div>
+  <button onclick="copiarPix()">Copiar Código Pix</button>
+  <div id="timer">Tempo restante: 15:00</div>
 
-  function iniciarContador(segundos) {
-    const timer = document.getElementById("timer");
-    const intervalo = setInterval(() => {
-      let min = String(Math.floor(segundos / 60)).padStart(2, '0');
-      let sec = String(segundos % 60).padStart(2, '0');
-      timer.textContent = `${min}:${sec}`;
-      if (segundos <= 0) {
-        clearInterval(intervalo);
-        window.location.href = "/";
+  <script>
+    let tempo = 15 * 60;
+    const timerDiv = document.getElementById('timer');
+
+    function atualizarTimer() {
+      const minutos = Math.floor(tempo / 60);
+      const segundos = tempo % 60;
+      timerDiv.textContent = \`Tempo restante: \${minutos.toString().padStart(2, '0')}:\${segundos.toString().padStart(2, '0')}\`;
+      if (tempo <= 0) {
+        location.reload();
       }
-      segundos--;
-    }, 1000);
-  }
+      tempo--;
+    }
+    setInterval(atualizarTimer, 1000);
 
-  gerarPix();
-  iniciarContador(900);
-</script>
+    function copiarPix() {
+      const texto = document.getElementById('copiaCola').textContent;
+      navigator.clipboard.writeText(texto).then(() => {
+        alert('Código Pix copiado!');
+      });
+    }
+
+    async function carregarPix() {
+      const res = await fetch('/gerar-pix');
+      const data = await res.json();
+      document.getElementById('qrcode').src = data.qrCode;
+      document.getElementById('copiaCola').textContent = data.copiaCola;
+    }
+
+    carregarPix();
+  </script>
+</body>
+</html>
